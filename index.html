@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>WSA Apostas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 2rem;
+      background: #f2f2f2;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: auto;
+      padding: 2rem;
+    }
+
+    input, button {
+      width: 100%;
+      margin-top: 1rem;
+      padding: 10px;
+      font-size: 1rem;
+    }
+
+    button {
+      background: #28a745;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #218838;
+    }
+
+    .mensagem {
+      margin-top: 1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h2>Fazer Aposta</h2>
+  <input type="text" id="telefone" placeholder="Seu telefone">
+  <input type="text" id="aposta" placeholder="Seu palpite (ex: Time A)">
+  <button onclick="enviarAposta()">Enviar Aposta</button>
+  <div class="mensagem" id="mensagem"></div>
+</div>
+
+<script>
+  async function enviarAposta() {
+    const telefone = document.getElementById('telefone').value;
+    const aposta = document.getElementById('aposta').value;
+    const mensagem = document.getElementById('mensagem');
+
+    if (!telefone || !aposta) {
+      mensagem.textContent = 'Preencha todos os campos.';
+      mensagem.style.color = 'red';
+      return;
+    }
+
+    try {
+      const response = await fetch('https://aposta-backend.onrender.com/apostar', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ telefone, aposta })
+      });
+
+      const data = await response.json();
+
+      if (data.sucesso) {
+        mensagem.textContent = data.mensagem;
+        mensagem.style.color = 'green';
+      } else {
+        mensagem.textContent = data.erro || 'Erro ao enviar.';
+        mensagem.style.color = 'red';
+      }
+    } catch (err) {
+      mensagem.textContent = 'Erro de conexão.';
+      mensagem.style.color = 'red';
+    }
+  }
+</script>
+
+</body>
+</html>
