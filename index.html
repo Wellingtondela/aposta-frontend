@@ -1,242 +1,119 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <title>WSA Apostas</title>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/x-icon" href="https://static-00.iconduck.com/assets.00/file-type-favicon-icon-2048x2048-q7lmo5fn.png">
+  <title>Apostas Pix</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 2rem;
-      background: #f2f2f2;
-    }
-
-    .card {
-      background: #fff;
-      border-radius: 8px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      max-width: 400px;
-      margin: auto;
-      padding: 2rem;
-      text-align: center;
-    }
-
-    .escudos {
-      display: flex;
-      justify-content: space-around;
-      align-items: center;
-      margin-bottom: 1rem;
-    }
-
-    .escudos img {
-      width: 80px;
-      height: auto;
-    }
-
-    .vs {
-      font-weight: bold;
-      font-size: 1.2rem;
-    }
-
-    input[type="text"] {
-      width: 100%;
-      margin-top: 1rem;
-      padding: 10px;
-      font-size: 1rem;
-    }
-
-    .placares {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-
-    .placar-btn {
-      padding: 10px 15px;
-      border: 2px solid #ccc;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-      background-color: #eee;
-      transition: background-color 0.2s, border-color 0.2s;
-    }
-
-    .placar-btn.selected {
-      background-color: #28a745;
-      color: white;
-      border-color: #218838;
-    }
-
-    .enviar {
-      margin-top: 1.5rem;
-      width: 100%;
-      padding: 10px;
-      background: #28a745;
-      color: white;
-      border: none;
-      cursor: pointer;
-      font-size: 1rem;
-      font-weight: bold;
-    }
-
-    .enviar:hover {
-      background: #218838;
-    }
-
-    .mensagem {
-      margin-top: 1rem;
-      text-align: center;
-    }
-
-    /* Campo de placar personalizada escondido inicialmente */
-    #placar-personalizado-container {
-      margin-top: 1rem;
+    #sucessoCard {
       display: none;
+      padding: 20px;
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+      margin-top: 20px;
+      border-radius: 5px;
+    }
+    #qrCodeContainer img {
+      width: 250px;
+      height: 250px;
     }
   </style>
 </head>
 <body>
+  <h1>Faça sua aposta</h1>
 
-<div class="card">
-  <div class="escudos">
-    <img src="https://upload.wikimedia.org/wikipedia/en/a/a7/Paris_Saint-Germain_F.C..svg" alt="Escudo PSG">
-    <span class="vs">VS</span>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/0/05/FC_Internazionale_Milano_2021.svg" alt="Escudo Inter de Milão">
+  <form id="formAposta">
+    <input type="text" id="aposta" placeholder="Sua aposta (ex: PSG 2 x 1 Inter)" required />
+    <input type="text" id="telefone" placeholder="Telefone" required />
+    <input type="number" id="valor" placeholder="Valor (ex: 10.00)" required min="1" step="0.01" />
+    <button type="submit">Gerar pagamento</button>
+  </form>
+
+  <div id="qrCodeContainer" style="margin-top: 20px;"></div>
+
+  <div id="sucessoCard">
+    <h2>Aposta realizada com sucesso! 🎉</h2>
+    <p>Obrigado por apostar conosco.</p>
   </div>
 
-  <h2>PSG x Inter de Milão</h2>
+  <script>
+    const form = document.getElementById('formAposta');
+    const qrCodeContainer = document.getElementById('qrCodeContainer');
+    const sucessoCard = document.getElementById('sucessoCard');
 
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
 
-  <div class="placares" id="placares">
-    <button class="placar-btn">0x0</button>
-    <button class="placar-btn">1x0</button>
-    <button class="placar-btn">0x1</button>
-    <button class="placar-btn">1x1</button>
-    <button class="placar-btn">2x0</button>
-    <button class="placar-btn">0x2</button>
-    <button class="placar-btn">2x1</button>
-    <button class="placar-btn">1x2</button>
-    <button class="placar-btn">2x2</button>
-    <button class="placar-btn">3x0</button>
-    <button class="placar-btn">0x3</button>
-    <button class="placar-btn">3x1</button>
-    <button class="placar-btn">1x3</button>
-    <button class="placar-btn">3x2</button>
-    <button class="placar-btn">2x3</button>
-    <button class="placar-btn">3x3</button>
+      // Limpa área do QR Code e card sucesso
+      qrCodeContainer.innerHTML = '';
+      sucessoCard.style.display = 'none';
 
-    <!-- Botão para ativar placar personalizado -->
-    <button class="placar-btn" id="btn-personalizado">Personalizada</button>
-  </div>
+      const aposta = document.getElementById('aposta').value;
+      const telefone = document.getElementById('telefone').value;
+      const valor = document.getElementById('valor').value;
 
-  <div id="placar-personalizado-container">
-    <input type="text" id="placar-personalizado" placeholder="PSG x Inter (ex: 4x3)" maxlength="5" />
-  </div>
-<input type="text" id="telefone" placeholder="Seu telefone">
-  <button class="enviar" onclick="enviarAposta()">Enviar Aposta</button>
-  <div class="mensagem" id="mensagem"></div>
-</div>
+      try {
+        const res = await fetch('https://aposta-backend.onrender.com/criar-pagamento', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ aposta, telefone, valor })
+        });
 
-<script>
-  let placarSelecionado = '';
-  let usandoPersonalizado = false;
-
-  const placaresBtns = document.querySelectorAll('.placar-btn');
-  const btnPersonalizado = document.getElementById('btn-personalizado');
-  const containerPersonalizado = document.getElementById('placar-personalizado-container');
-  const inputPersonalizado = document.getElementById('placar-personalizado');
-
-  // Função para limpar seleção dos botões (exceto o personalizado)
-  function limparSelecao() {
-    placaresBtns.forEach(btn => {
-      if (btn !== btnPersonalizado) btn.classList.remove('selected');
-    });
-  }
-
-  placaresBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (btn === btnPersonalizado) {
-        // Ativa placar personalizado
-        usandoPersonalizado = true;
-        limparSelecao();
-        btnPersonalizado.classList.add('selected');
-        containerPersonalizado.style.display = 'block';
-        inputPersonalizado.focus();
-        placarSelecionado = '';
-      } else {
-        // Seleciona placar padrão
-        usandoPersonalizado = false;
-        containerPersonalizado.style.display = 'none';
-        limparSelecao();
-        btn.classList.add('selected');
-        placarSelecionado = btn.textContent;
-        inputPersonalizado.value = '';
-      }
-    });
-  });
-
-  async function enviarAposta() {
-    const telefone = document.getElementById('telefone').value.trim();
-    let aposta = '';
-
-    if (usandoPersonalizado) {
-      aposta = inputPersonalizado.value.trim();
-    } else {
-      aposta = placarSelecionado;
-    }
-
-    const mensagem = document.getElementById('mensagem');
-
-    if (!telefone || !aposta) {
-      mensagem.textContent = 'Preencha o telefone e escolha ou digite um placar.';
-      mensagem.style.color = 'red';
-      return;
-    }
-
-    // Validação simples do formato do placar personalizado (ex: 4x3)
-    if (usandoPersonalizado) {
-      const regexPlacar = /^[0-9]+x[0-9]+$/;
-      if (!regexPlacar.test(aposta)) {
-        mensagem.textContent = 'Formato do placar personalizado inválido. Use formato Ex: 4x3';
-        mensagem.style.color = 'red';
-        return;
-      }
-    }
-
-    try {
-      const response = await fetch('https://aposta-backend.onrender.com/apostar', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ telefone, aposta })
-      });
-
-      const data = await response.json();
-
-      if (data.sucesso) {
-        mensagem.textContent = data.mensagem;
-        mensagem.style.color = 'green';
-        // Limpar campos
-        document.getElementById('telefone').value = '';
-        if (usandoPersonalizado) {
-          inputPersonalizado.value = '';
-        } else {
-          limparSelecao();
-          placarSelecionado = '';
+        if (!res.ok) {
+          throw new Error('Erro ao gerar pagamento');
         }
-        usandoPersonalizado = false;
-        containerPersonalizado.style.display = 'none';
-        btnPersonalizado.classList.remove('selected');
-      } else {
-        mensagem.textContent = data.erro || 'Erro ao enviar.';
-        mensagem.style.color = 'red';
-      }
-    } catch (err) {
-      mensagem.textContent = 'Erro de conexão.';
-      mensagem.style.color = 'red';
-    }
-  }
-</script>
 
+        const data = await res.json();
+
+        // Monta QR Code e link “copie e cole”
+        const img = document.createElement('img');
+        img.src = `data:image/png;base64,${data.qr_code_base64}`;
+        img.alt = 'QR Code PIX';
+
+        const link = document.createElement('p');
+        link.textContent = `Link copie e cole: ${data.qr_code}`;
+
+        qrCodeContainer.appendChild(img);
+        qrCodeContainer.appendChild(link);
+
+        // Começa a monitorar status do pagamento
+        monitorarPagamento(data.payment_id);
+
+      } catch (error) {
+        alert('Erro ao gerar pagamento: ' + error.message);
+      }
+    });
+
+    function mostrarCardSucesso() {
+      qrCodeContainer.style.display = 'none';
+      sucessoCard.style.display = 'block';
+    }
+
+    async function verificarStatusPagamento(paymentId) {
+      try {
+        const res = await fetch(`https://aposta-backend.onrender.com/status-pagamento/${paymentId}`);
+        if (!res.ok) throw new Error('Erro ao consultar status');
+        const data = await res.json();
+        return data.status; // pending ou approved
+      } catch (e) {
+        console.error('Erro ao verificar status:', e);
+        return 'pending';
+      }
+    }
+
+    function monitorarPagamento(paymentId) {
+      const intervalId = setInterval(async () => {
+        const status = await verificarStatusPagamento(paymentId);
+        console.log('Status pagamento:', status);
+        if (status === 'approved') {
+          clearInterval(intervalId);
+          mostrarCardSucesso();
+        }
+      }, 5000);
+    }
+  </script>
 </body>
 </html>
